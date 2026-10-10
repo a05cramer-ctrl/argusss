@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Argus</title>
+<meta name="description" content="Argus is an agent that watches every coin in your wallet and sells you out the moment the dev or a bundle wallet moves.">
+<meta property="og:title" content="Argus never sleeps.">
+<meta property="og:description" content="An agent that watches every coin in your wallet and sells you out the moment the dev or a bundle wallet moves.">
+<meta property="og:image" content="og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07080A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' rx='3' fill='%2307080A'/%3E%3Cpath fill='%23F2F3F5' d='M5 5h6v1H5zM3 6h10v1H3zM2 7h12v2H2zM3 9h10v1H3zM5 10h6v1H5z'/%3E%3Cpath fill='%23B6FF3B' d='M6 6h4v1H6zM6 7h4v2H6zM6 9h4v1H6z'/%3E%3Cpath fill='%2307080A' d='M7 7h2v2H7z'/%3E%3Cpath fill='%23F2F3F5' d='M9 6h1v1H9z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@400..900&family=Hanken+Grotesk:wght@400;500;600&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#07080A;--bg2:#0B0D10;--panel:#0E1014;--line:#1B1E25;--line2:#272B34;
+  --text:#F2F3F5;--muted:#8E94A0;--dim:#4C5260;
+  --lime:#B6FF3B;--lime-dim:rgba(182,255,59,.14);--red:#FF3B3B;--red-dim:rgba(255,59,59,.14);
+  --display:"Doto",ui-monospace,monospace;--body:"Hanken Grotesk",system-ui,sans-serif;--mono:"Martian Mono",ui-monospace,monospace;
+  --nav-h:60px;--gutter:16px;--max:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 20px);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+img,svg,canvas{display:block}
+::selection{background:var(--lime);color:#07080A}
+:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.wrap{width:min(100% - var(--gutter)*2,var(--max));margin-inline:auto}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:0;color:var(--muted)}
+.display{font-family:var(--display);font-weight:800;line-height:.95;letter-spacing:-.01em}
+h2.display{font-size:clamp(34px,5.4vw,64px);max-width:16ch}
+.lead{font-size:clamp(17px,1.5vw,20px);color:var(--muted);max-width:52ch;margin-top:18px}
+.lead b{color:var(--text);font-weight:500}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;inset:0 0 auto 0;height:var(--nav-h);z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 var(--gutter);background:linear-gradient(to bottom,rgba(7,8,10,.92),rgba(7,8,10,.72));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.04)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;min-height:44px}
+.brand svg{width:28px;height:16px}
+.brand .word{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:.04em}
+.nav-r{display:flex;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border:1px solid var(--line2);border-radius:999px;font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.pill[data-s="live"]{color:var(--text);border-color:rgba(182,255,59,.35)}
+.pill[data-s="live"] i{background:var(--lime);box-shadow:0 0 0 3px var(--lime-dim);animation:pulse 1.6s ease-in-out infinite}
+.pill[data-s="connecting"] i,.pill[data-s="reconnecting"] i{background:var(--muted);animation:pulse 1s ease-in-out infinite}
+.pill[data-s="demo"]{color:var(--text);border-style:dashed}
+.pill[data-s="demo"] i{background:var(--text)}
+@keyframes pulse{50%{opacity:.35}}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:44px;padding:0 10px;border-radius:10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.icon-btn:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.icon-btn[aria-pressed="true"]{color:var(--lime)}
+.nav-buy{display:none;align-items:center;height:36px;padding:0 14px;border-radius:999px;background:var(--text);color:#07080A;font-weight:600;font-size:14px;text-decoration:none}
+.nav-buy:hover{background:var(--lime)}
+@media(min-width:760px){.nav-buy{display:inline-flex}.nav{padding:0 24px}}
+
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding-top:var(--nav-h);background:var(--bg)}
+.wall-wrap{position:relative;height:clamp(380px,58svh,560px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
+.wall{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y}
+.wall-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(7,8,10,.85) 100%)}
+.wall-tag{position:absolute;left:var(--gutter);top:14px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;pointer-events:none;max-width:calc(100% - var(--gutter)*2)}
+.wall-tag .mono{color:var(--text)}
+.wall-tag .demo-chip{background:rgba(7,8,10,.9);color:var(--muted);font-size:10px;white-space:normal;line-height:1.4;max-width:100%}
+.tip{position:absolute;z-index:6;pointer-events:none;padding:8px 10px;border:1px solid var(--line2);background:rgba(11,13,16,.96);font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--muted);white-space:nowrap;transform:translate(-50%,calc(-100% - 14px));opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.tip.below{transform:translate(-50%,0)}
+.tip b{color:var(--text);font-weight:500}
+.tip .st{color:var(--lime)}.tip .st.bad{color:var(--red)}
+
+.hero-copy{position:relative;z-index:4;padding:34px var(--gutter) 26px}
+.hero-copy h1{font-family:var(--display);font-weight:900;font-size:clamp(46px,11.5vw,112px);line-height:.9;letter-spacing:-.01em;max-width:9ch}
+.dot{display:inline-block;width:.17em;height:.17em;background:var(--lime);margin-left:.1em;vertical-align:baseline}
+.hero-copy p{margin-top:18px;font-size:clamp(17px,1.45vw,21px);line-height:1.45;color:var(--muted);max-width:40ch}
+.hero-copy p b{color:var(--text);font-weight:500}
+.cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+.btn-primary{background:var(--text);color:#07080A}
+.btn-primary:hover{background:var(--lime)}
+.btn-ghost{border-color:var(--line2);color:var(--text)}
+.btn-ghost:hover{border-color:var(--text)}
+.btn-lime{background:var(--lime);color:#07080A}
+.btn-lime:hover{background:#d2ff7a}
+.btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+
+.hero-meta{position:relative;z-index:4;padding:20px var(--gutter) 28px;display:grid;gap:18px}
+.counters{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.counter .n{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.6vw,56px);line-height:1;font-variant-numeric:tabular-nums}
+.counter .n.bad{color:var(--red)}
+.counter .l{margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.4}
+.counters-src{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.counters-src b{color:var(--muted);font-weight:500}
+
+.feed{display:flex;flex-direction:column;gap:8px;min-height:0}
+.feed-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.feed-head .t{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em}
+.feed-list{display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.ev{display:grid;grid-template-columns:3px 1fr;gap:12px;padding:10px 12px 10px 0;border:1px solid var(--line2);background:#0E1014;animation:slidein .32s cubic-bezier(.2,.8,.2,1) both}
+.ev i{display:block;background:var(--red)}
+.ev.new{border-color:rgba(255,59,59,.45);background:#121014}
+.ev.new i{animation:barpulse 1.1s ease-in-out 3}
+.ev.watch.new{border-color:rgba(182,255,59,.35);background:#0E1014}
+@keyframes barpulse{50%{opacity:.25}}
+.ev.watch i{background:var(--lime)}
+.ev .h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;font-family:var(--mono);font-size:12px;color:var(--text)}
+.ev.watch .h{font-size:11px;color:var(--muted)}
+.ev.watch{padding:7px 12px 7px 0}
+.ev .h .k{color:var(--red);font-weight:500}
+.ev.watch .h .k{color:var(--lime)}
+.ev .m{margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.ev .m a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line2)}
+.ev .m a:hover{color:var(--text)}
+.ev .demo{color:var(--dim);border:1px dashed var(--line2);padding:0 5px;font-size:10px}
+.feed-empty{padding:14px 0;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6}
+@keyframes slidein{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+
+@media(min-width:1000px){
+  .hero{height:100svh;min-height:760px;max-height:1100px;padding-top:0}
+  .wall-wrap{position:absolute;inset:0;height:auto;border:0}
+  .wall-tag{top:calc(var(--nav-h) + 18px);left:48px}
+  .hero-copy{position:absolute;left:48px;bottom:52px;width:min(620px,46vw);padding:0}
+  .hero-copy h1{font-size:clamp(84px,7.6vw,118px)}
+  .hero-meta{position:absolute;right:48px;top:calc(var(--nav-h) + 24px);bottom:52px;width:360px;padding:0;grid-template-rows:auto auto 1fr;gap:22px}
+  .counters{grid-template-columns:repeat(3,1fr);gap:10px}
+  .counter .n{font-size:40px}
+  .feed{min-height:0}
+  .feed-list{flex:1;min-height:0;-webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent);mask-image:linear-gradient(to bottom,#000 78%,transparent)}
+}
+@media(min-width:1400px){.hero-copy{left:64px}.hero-meta{right:64px}.wall-tag{left:64px}}
+
+/* ---------- spine layout ---------- */
+.spine{position:relative;padding:72px 0 0}
+.spine::before{content:"";position:absolute;left:calc(var(--gutter) + 14px);top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--line) ,var(--line) 92%,transparent)}
+.sec{position:relative;padding:0 0 88px;scroll-margin-top:calc(var(--nav-h) + 20px)}
+.sec-node{position:absolute;left:var(--gutter);top:4px;width:29px;height:17px}
+.sec-node svg{width:29px;height:17px}
+.sec-body{padding-left:52px}
+.sec-head{display:grid;gap:4px}
+.sec-head .k{font-family:var(--mono);font-size:12px;color:var(--lime)}
+@media(min-width:760px){
+  .spine::before{left:calc((100vw - min(100vw - var(--gutter)*2,var(--max)))/2 + 14px)}
+  .spine{padding-top:120px}
+  .sec{padding-bottom:140px}
+  .sec-body{padding-left:0;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:start}
+  .sec-body>*{min-width:0}
+  .sec-head{position:sticky;top:96px;padding-left:60px}
+  .sec-node{left:0;top:6px}
+  .sec-body.one{grid-template-columns:1fr}
+}
+.spine .wrap{position:relative}
+
+/* ---------- scan ---------- */
+.scan-form{display:flex;gap:8px;margin-top:22px;max-width:560px}
+.scan-form input{flex:1;min-width:0;height:48px;padding:0 14px;border:1px solid var(--line2);border-radius:12px;background:var(--bg2);color:var(--text);font-family:var(--mono);font-size:13px}
+.scan-form input::placeholder{color:var(--dim)}
+.scan-form input:focus{outline:0;border-color:var(--lime)}
+.scan-form button{height:48px;padding:0 18px;border-radius:12px;background:var(--text);color:#07080A;font-weight:600;flex:none}
+.scan-form button:hover{background:var(--lime)}
+.scan-form button[disabled]{opacity:.5;cursor:wait}
+.scan-msg{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);min-height:16px;line-height:1.5}
+.scan-msg.bad{color:var(--red)}
+
+.orbit-wrap{display:grid;gap:22px;scroll-margin-top:calc(var(--nav-h) + 20px)}
+.orbit{position:relative;display:grid;gap:10px}
+.orbit svg.rings{display:none}
+.coin{position:relative;z-index:2;padding:16px 18px;border:1px solid var(--line2);background:var(--panel);border-radius:14px}
+.coin .src{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--muted);padding:3px 7px;border:1px dashed var(--line2);border-radius:999px}
+.coin .src.live{border-style:solid;color:var(--lime);border-color:rgba(182,255,59,.4)}
+.coin .sym{margin-top:10px;font-family:var(--display);font-weight:900;font-size:30px;line-height:1;overflow-wrap:anywhere}
+.coin .nm{font-size:14px;color:var(--muted);margin-top:4px}
+.coin .mint{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--dim);word-break:break-all}
+.node{position:relative;z-index:2;display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);background:rgba(11,13,16,.9);border-radius:12px;min-height:66px}
+.node .ey svg{width:39px;height:21px}
+.node .role{font-family:var(--mono);font-size:11px;color:var(--lime)}
+.node.bad .role{color:var(--red)}
+.node .val{font-size:14px;color:var(--text);margin-top:2px}
+.node .sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.node .st{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right;white-space:nowrap}
+.node .st b{color:var(--lime);font-weight:500}
+.node.bad .st b{color:var(--red)}
+@media(min-width:760px){
+  .orbit{height:600px;display:block}
+  .orbit svg.rings{display:block;position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .coin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:176px;text-align:center;padding:14px}
+  .node{position:absolute;left:0;top:0;width:200px;grid-template-columns:40px 1fr;padding:10px 12px;min-height:0;will-change:transform}
+  .node .st{grid-column:1/-1;text-align:left}
+}
+.holders{border-top:1px solid var(--line)}
+.holders h3{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--muted);padding:12px 0 8px}
+.hrow{display:grid;grid-template-columns:28px 1fr 64px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--muted)}
+.hrow .i{color:var(--dim)}
+.hrow .w{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .w small{color:var(--dim);margin-left:8px}
+.hrow .b{position:relative;display:block;height:5px;background:var(--line);overflow:hidden;margin-top:5px}
+.hrow .b i{position:absolute;inset:0 auto 0 0;background:var(--lime)}
+.hrow .p{text-align:right;color:var(--text)}
+.hrow.cl .b i{background:var(--muted)}
+.hrow.dv .b i{background:var(--red)}
+.hrow.dv .w{color:var(--red)}
+
+.trig-demo{margin-top:20px;display:grid;gap:14px}
+.timeline{display:grid;gap:8px}
+.tl{display:grid;grid-template-columns:18px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;opacity:.38;transition:opacity .25s,border-color .25s}
+.tl.on{opacity:1;border-color:var(--line2)}
+.tl .d{width:10px;height:10px;border-radius:50%;background:var(--dim);margin:0 auto}
+.tl.on .d{background:var(--text);box-shadow:0 0 0 4px rgba(242,243,245,.12)}
+.tl.alert.on .d{background:var(--red);box-shadow:0 0 0 4px var(--red-dim)}
+.tl.done .d,.tl.alert.done .d{background:var(--lime);box-shadow:none}
+.tl .t{font-weight:600;font-size:14px}
+.tl .s{font-size:13px;color:var(--muted)}
+.tl .tm{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.tl .tm b{color:var(--text);font-weight:500}
+.exit-card{padding:16px 18px;border:1px solid var(--line2);border-left:3px solid var(--lime);background:var(--panel);border-radius:0 12px 12px 0}
+.exit-card .h{font-family:var(--display);font-weight:800;font-size:28px;line-height:1}
+.exit-card .m{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.exit-card .m b{color:var(--text);font-weight:500}
+.demo-chip{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;color:var(--muted);border:1px dashed var(--line2);padding:2px 7px;border-radius:999px;white-space:nowrap}
+
+/* ---------- triggers ---------- */
+.trigs{display:grid}
+.trig{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;padding:20px 0;border-top:1px solid var(--line)}
+.trig:last-child{border-bottom:1px solid var(--line)}
+.trig .ey svg{width:52px;height:28px}
+.trig .t{font-weight:600;font-size:17px}
+.trig .s{color:var(--muted);font-size:14px;margin-top:3px;max-width:48ch}
+.trig .s b{color:var(--text);font-weight:500;font-family:var(--mono);font-size:12px}
+.switch{position:relative;width:52px;height:30px;border-radius:999px;background:var(--line2);transition:background .2s;flex:none;padding:0;display:block}
+.switch::before{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--text);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--lime)}
+.switch[aria-checked="true"]::before{transform:translateX(22px);background:#07080A}
+.switch-wrap{display:flex;align-items:center;min-height:44px;min-width:44px;justify-content:center}
+.trig-note{margin-top:16px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6}
+
+/* ---------- exit ---------- */
+.steps{display:grid;gap:0;counter-reset:s}
+.step{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:18px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--lime)}
+.step .t{font-weight:600;font-size:17px}
+.step .s{color:var(--muted);font-size:14px;margin-top:3px;max-width:50ch}
+.step .tm{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.step .tm b{color:var(--text);font-weight:500}
+@media(min-width:1000px){
+  .steps{grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .step{grid-template-columns:1fr;gap:10px;border:0;padding:20px 20px 22px 0;border-right:1px solid var(--line)}
+  .step:last-child{border:0}
+  .step .n{font-size:40px}
+}
+
+/* ---------- wallet ---------- */
+.ledger{display:grid}
+.lrow{display:grid;grid-template-columns:1fr;gap:6px;padding:18px 0;border-top:1px solid var(--line)}
+.lrow:last-child{border-bottom:1px solid var(--line)}
+.lrow .t{font-weight:600;font-size:17px}
+.lrow .s{color:var(--muted);font-size:14px;max-width:52ch}
+.lrow .v{font-family:var(--mono);font-size:12px;color:var(--text)}
+@media(min-width:600px){.lrow{grid-template-columns:150px 1fr}.lrow .v{text-align:left}}
+.fee{margin-top:26px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:baseline}
+.fee .big{font-family:var(--display);font-weight:900;font-size:clamp(56px,8vw,88px);line-height:1}
+.fee .big small{font-size:.5em}
+.fee .s{color:var(--muted);font-size:15px;max-width:30ch}
+.fee .s b{color:var(--text);font-weight:500}
+
+/* ---------- tiers ---------- */
+table.tiers{width:100%;border-collapse:collapse;font-size:15px}
+.tiers th{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);text-align:left;padding:0 0 10px;border-bottom:1px solid var(--line2)}
+.tiers td{padding:16px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.tiers td:first-child{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;white-space:nowrap}
+.tiers td:first-child small{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);display:block;margin-top:5px}
+.tiers td:last-child{text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tiers td .w{color:var(--text);font-weight:500}
+.tiers tr.hi td:first-child{color:var(--lime)}
+.tiers-note{margin-top:14px;font-size:14px;color:var(--muted)}
+.tiers-note b{color:var(--text);font-weight:500}
+.launch-note{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* ---------- token ---------- */
+.token{padding:30px 0 0}
+.token-card{border:1px solid var(--line2);border-radius:16px;background:var(--panel);padding:22px;display:grid;gap:18px}
+.ca{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.ca code{display:block;min-height:48px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;line-height:1.4}
+.ca code.empty{color:var(--dim)}
+.ca button{height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap}
+.ca button:hover{border-color:var(--text)}
+.ca button[disabled]{opacity:.4;cursor:default}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.token .mono.small{color:var(--dim);font-size:11px}
+
+/* ---------- footer ---------- */
+footer{margin-top:0;border-top:1px solid var(--line);padding:40px 0 calc(40px + env(safe-area-inset-bottom))}
+footer .wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+footer .word{font-family:var(--display);font-weight:900;font-size:40px;letter-spacing:.06em;display:flex;align-items:center;gap:14px}
+footer .word svg{width:44px;height:24px}
+footer nav{display:flex;gap:6px;margin-left:-12px}
+footer nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;border-radius:8px}
+footer nav a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+footer .fine{width:100%;font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* reveal for trigger eyes only */
+.reveal{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="#top" aria-label="Argus">
+    <span class="logo" data-eye="small" data-look="1,0"></span>
+    <span class="word">ARGUS</span>
+  </a>
+  <div class="nav-r">
+    <span class="pill" id="status-pill" data-s="connecting"><i></i><span>connecting</span></span>
+    <button class="icon-btn" id="sound-btn" aria-pressed="false" aria-label="Sound off">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6h3l4-3v10l-4-3H2z"/><path class="w" d="M11 5.5c1.3 1.3 1.3 3.7 0 5"/></svg>
+      <span>sound</span>
+    </button>
+    <a class="nav-buy" id="nav-buy" href="#token">Buy $ARGUS</a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" id="hero" aria-label="Live eye wall">
+  <div class="hero-copy">
+    <h1>Argus never sleeps<span class="dot" aria-hidden="true"></span></h1>
+    <p>An agent that watches every coin in your wallet and <b>sells you out the moment the dev or a bundle wallet moves.</b></p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#scan">Point it at your bag</a>
+      <a class="btn btn-ghost" href="#triggers">See the five triggers</a>
+    </div>
+  </div>
+
+  <div class="wall-wrap" id="wall-wrap">
+    <canvas class="wall" id="wall-canvas" aria-label="A wall of pixel eyes, one per live pump.fun launch"></canvas>
+    <div class="wall-vignette"></div>
+    <div class="wall-tag"><span class="mono" id="wall-tag-text">Each eye is a live pump.fun launch. Hover one.</span><span class="demo-chip wall-chip" id="demo-banner" hidden>DEMONSTRATION · live feed unreachable, replaying a synthetic tape</span></div>
+    <div class="tip" id="wall-tip" role="status"></div>
+  </div>
+
+  <div class="hero-meta">
+    <div class="counters" aria-live="off">
+      <div class="counter"><div class="n" id="c-devs">0</div><div class="l">devs watched</div></div>
+      <div class="counter"><div class="n bad" id="c-dev-sells">0</div><div class="l">dev sells caught</div></div>
+      <div class="counter"><div class="n bad" id="c-bundle-sells">0</div><div class="l">bundle sells caught</div></div>
+    </div>
+    <div class="counters-src" id="counters-src"><b>Live from pump.fun</b>, since you opened this page</div>
+    <div class="feed">
+      <div class="feed-head"><span class="t">WATCH LOG</span><span class="mono" id="feed-count">0 events</span></div>
+      <div class="feed-list" id="feed-list">
+        <div class="feed-empty" id="feed-empty">Waiting for the first dev or bundle wallet to move. On a normal night this takes under a minute.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="spine">
+<div class="wrap">
+
+<!-- ================= SCAN ================= -->
+<section class="sec" id="scan">
+  <div class="sec-body">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">Point it at your bag<span class="dot" aria-hidden="true"></span></h2>
+      <p class="lead">Paste a pump.fun address. Argus finds the wallets that can hurt you — the <b>dev</b>, the <b>bundle cluster</b> that bought in the creation block, the first <b>snipers</b>, the <b>top 10</b> and the <b>creator-fee wallet</b> — and puts an eye on each.</p>
+      <form class="scan-form" id="scan-form" autocomplete="off">
+        <input id="scan-input" name="mint" inputmode="text" spellcheck="false" placeholder="pump.fun contract address" aria-label="pump.fun contract address">
+        <button type="submit" id="scan-btn">Scan</button>
+      </form>
+      <div class="scan-msg" id="scan-msg">Showing a sample coin. Nothing below is real until you scan.</div>
+    </div>
+
+    <div class="orbit-wrap">
+      <div class="orbit" id="orbit">
+        <svg class="rings" id="orbit-rings" aria-hidden="true"></svg>
+        <div class="coin" id="coin-card">
+          <span class="src" id="coin-src">SAMPLE · DEMONSTRATION</span>
+          <div class="sym" id="coin-sym">$SAMPLE</div>
+          <div class="nm" id="coin-name">Sample coin</div>
+          <div class="mint" id="coin-mint">—</div>
+        </div>
+        <div class="node" data-role="dev" id="node-dev"><div class="ey"></div><div><div class="role">Dev wallet</div><div class="val"></div><div class="sub"></div></div><div class="st"><b>watching</b></div></div>
+        <div class="node" data-role="cluster" id="node-cluster"><div class="ey"></div><div><div class="role">Bundle cluster</div><div class="val"></div><div class="sub"></div></div><div class="st"><b>watching</b></div></div>
+        <div class="node" data-role="snipers" id="node-snipers"><div class="ey"></div><div><div class="role">Snipers</div><div class="val"></div><div class="sub"></div></div><div class="st"><b>watching</b></div></div>
+        <div class="node" data-role="top" id="node-top"><div class="ey"></div><div><div class="role">Top 10</div><div class="val"></div><div class="sub"></div></div><div class="st"><b>watching</b></div></div>
+        <div class="node" data-role="fee" id="node-fee"><div class="ey"></div><div><div class="role">Fee wallet</div><div class="val"></div><div class="sub"></div></div><div class="st"><b>watching</b></div></div>
+      </div>
+
+      <div class="holders" id="holders">
+        <h3 id="holders-title">Top 10 holders · % of supply</h3>
+        <div id="holders-list"></div>
+      </div>
+
+      <div class="trig-demo">
+        <div><button class="btn btn-lime" id="test-trigger" type="button">Test a trigger</button> <span class="demo-chip" style="margin-left:8px">demonstration · no real trade</span></div>
+        <div class="timeline" id="timeline" hidden>
+          <div class="tl alert" data-step="0"><span class="d"></span><div><div class="t">Watch</div><div class="s">Dev wallet sells 2.1% of supply.</div></div><div class="tm"><b>t = 0</b></div></div>
+          <div class="tl" data-step="1"><span class="d"></span><div><div class="t">Detect</div><div class="s">Sell classified against your trigger set.</div></div><div class="tm">target <b>~400 ms</b></div></div>
+          <div class="tl" data-step="2"><span class="d"></span><div><div class="t">Bundle</div><div class="s">Jupiter route for 100%, wrapped in a Jito bundle with a tip.</div></div><div class="tm">tip <b>0.002 SOL</b></div></div>
+          <div class="tl" data-step="3"><span class="d"></span><div><div class="t">Exit</div><div class="s">Bundle lands.</div></div><div class="tm">target <b>same / next block</b></div></div>
+        </div>
+        <div class="exit-card" id="exit-card" hidden>
+          <div class="h">SOLD 100%</div>
+          <div class="m"><b id="exit-sol">4.82 SOL</b><span>via Jito bundle</span><span>slot <b id="exit-slot">######</b></span><span class="demo-chip">DEMONSTRATION</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRIGGERS ================= -->
+<section class="sec" id="triggers">
+  <div class="sec-body">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">Five things that get a coin sold<span class="dot" aria-hidden="true"></span></h2>
+      <p class="lead">You pick them per coin. Any one that fires is enough. Nothing else — a red candle, a rug rumour, a quiet chart — makes Argus touch your bag.</p>
+    </div>
+    <div>
+      <div class="trigs" id="trig-list">
+        <div class="trig"><div class="ey" data-eye="trig"></div><div><div class="t">Dev sells any amount</div><div class="s">The creator wallet sells <b>&gt; 0</b> tokens. Size doesn't matter; the first sell is the signal.</div></div><div class="switch-wrap"><button class="switch" role="switch" aria-checked="true" aria-label="Dev sells any amount"></button></div></div>
+        <div class="trig"><div class="ey" data-eye="trig"></div><div><div class="t">Dev transfers tokens out</div><div class="s">Tokens leave the creator wallet to any address. Usually the step right before a sell from a fresh wallet.</div></div><div class="switch-wrap"><button class="switch" role="switch" aria-checked="true" aria-label="Dev transfers tokens out"></button></div></div>
+        <div class="trig"><div class="ey" data-eye="trig"></div><div><div class="t">Bundle cluster sells 10% of its bag</div><div class="s">Wallets that bought in the creation block are tracked as one bag. When <b>≥ 10%</b> of that bag is sold, it fires.</div></div><div class="switch-wrap"><button class="switch" role="switch" aria-checked="true" aria-label="Bundle cluster sells 10% of its bag"></button></div></div>
+        <div class="trig"><div class="ey" data-eye="trig"></div><div><div class="t">A top-10 holder dumps 25%</div><div class="s">Any wallet in the top 10 sells <b>≥ 25%</b> of what it holds in one go or within one minute.</div></div><div class="switch-wrap"><button class="switch" role="switch" aria-checked="false" aria-label="A top-10 holder dumps 25%"></button></div></div>
+        <div class="trig"><div class="ey" data-eye="trig"></div><div><div class="t">Creator fees claimed and sold</div><div class="s">The creator-fee wallet claims and swaps to SOL. Fine once in a while; Argus fires when the swap follows the claim within <b>60 s</b>.</div></div><div class="switch-wrap"><button class="switch" role="switch" aria-checked="false" aria-label="Creator fees claimed and sold"></button></div></div>
+      </div>
+      <p class="trig-note">Toggles here are a preview of the per-coin settings. Defaults when you add a coin: the first three on.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXIT ================= -->
+<section class="sec" id="exit">
+  <div class="sec-body one">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">How the exit works<span class="dot" aria-hidden="true"></span></h2>
+      <p class="lead">Four steps, every slot, for every coin you hold. Timings are targets, not promises — Solana decides the block.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><div class="t">Watch</div><div class="s">Argus streams every transaction touching your coins and the wallets it has flagged, slot by slot.</div><div class="tm">every slot · <b>~400 ms</b></div></div></div>
+      <div class="step"><div class="n">2</div><div><div class="t">Detect</div><div class="s">A sell or transfer from a flagged wallet is matched against the triggers you set for that coin.</div><div class="tm">target <b>&lt; 400 ms</b> after the block</div></div></div>
+      <div class="step"><div class="n">3</div><div><div class="t">Bundle</div><div class="s">A Jupiter swap for 100% (or your set %) is signed from the agent wallet and wrapped in a Jito bundle with a tip.</div><div class="tm">tip <b>0.001 – 0.01 SOL</b>, scales with size</div></div></div>
+      <div class="step"><div class="n">4</div><div><div class="t">Exit</div><div class="s">The bundle lands and your SOL is in the agent wallet. Argus writes the event to your log.</div><div class="tm">target <b>same or next block</b></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WALLET ================= -->
+<section class="sec" id="wallet">
+  <div class="sec-body">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">Your keys stay yours<span class="dot" aria-hidden="true"></span></h2>
+      <p class="lead">Argus trades from its own agent wallet. You fund it, you can empty it, and you can take the key with you.</p>
+    </div>
+    <div>
+      <div class="ledger">
+        <div class="lrow"><div class="v">Agent wallet</div><div><div class="t">You fund it, Argus trades from it</div><div class="s">A fresh keypair is made for you. Send the coins you want watched, or buy from inside it. Argus can only sign for that wallet.</div></div></div>
+        <div class="lrow"><div class="v">Export</div><div><div class="t">Export the key anytime</div><div class="s">The private key is yours to copy out at any moment. Import it into Phantom or Solflare and walk away.</div></div></div>
+        <div class="lrow"><div class="v">Never</div><div><div class="t">This site never asks for a seed phrase</div><div class="s">No wallet connect, no signing prompts, no key field anywhere on this page. If something that looks like Argus asks you to paste one, it's not Argus.</div></div></div>
+      </div>
+      <div class="fee">
+        <div class="big">0.5<small>%</small></div>
+        <div class="s"><b>Fee on triggered exits only.</b> Holding, watching and manual sells cost nothing. Argus earns when it saves you.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TIERS ================= -->
+<section class="sec" id="tiers">
+  <div class="sec-body">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">Hold $ARGUS, watch more<span class="dot" aria-hidden="true"></span></h2>
+      <p class="lead">Every watched coin is a stream of RPC calls and, on exit, a Jito tip. <b>$ARGUS creator fees pay for RPC + Jito tips.</b> Holding the token raises your limit.</p>
+    </div>
+    <div>
+      <table class="tiers">
+        <thead><tr><th>Hold</th><th>Watched coins</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>0 <small>$ARGUS</small></td><td><span class="w">3 coins</span></td><td>standard tips</td></tr>
+          <tr><td>1M <small>$ARGUS</small></td><td><span class="w">25 coins</span></td><td>standard tips</td></tr>
+          <tr class="hi"><td>10M <small>$ARGUS</small></td><td><span class="w">Unlimited</span></td><td>priority tips</td></tr>
+        </tbody>
+      </table>
+      <p class="tiers-note">Priority tips mean Argus pays a higher Jito tip on your exits, so your bundle lands first when everyone is leaving.</p>
+      <p class="launch-note">Tier thresholds are launch targets and may move with supply distribution.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOKEN ================= -->
+<section class="sec" id="token">
+  <div class="sec-body">
+    <div class="sec-head">
+      <span class="sec-node" data-eye="small" data-look="0,0" aria-hidden="true"></span>
+      <h2 class="display">$ARGUS</h2>
+      <p class="lead">On Solana, launched on pump.fun. One contract address — check it against the one below before you buy.</p>
+    </div>
+    <div class="token-card">
+      <div class="ca">
+        <code id="ca-text" class="empty">CA at launch</code>
+        <button type="button" id="ca-copy" disabled>copy</button>
+      </div>
+      <div class="links">
+        <a class="btn btn-primary" id="buy-link" href="#" aria-disabled="true">Buy on pump.fun</a>
+        <a class="btn btn-ghost" id="chart-link" href="#" aria-disabled="true">Chart</a>
+        <a class="btn btn-ghost" id="x-link" href="#" hidden>X</a>
+      </div>
+      <p class="mono small" id="token-note">Buy and chart links turn on the moment the contract is live.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="word"><span data-eye="small" data-look="-1,0"></span>ARGUS</div>
+    <nav><a href="#scan">Scan</a><a href="#triggers">Triggers</a><a href="#token">$ARGUS</a><a id="x-link-foot" href="#" hidden>X</a></nav>
+    <div class="fine">Argus never asks for a seed phrase. Live wall data: pump.fun via PumpPortal. Exit timings are targets.</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+'use strict';
+const CFG = Object.assign({NAME:"ARGUS",TICKER:"ARGUS",CA:"",CHAIN:"solana",PAD:"pumpfun",PAIR:"SOL",X:"",BUY:"",CHART:""}, window.ARGUS_CFG||{});
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'—';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ eye geometry ============ */
+const SMALL={cols:13,rows:7,r:1,span:[[4,8],[2,10],[1,11],[0,12],[1,11],[2,10],[4,8]]};
+const BIG={cols:21,rows:11,r:2,span:[[8,12],[5,15],[3,17],[2,18],[1,19],[0,20],[1,19],[2,18],[3,17],[5,15],[8,12]]};
+const C={sclera:'#F2F3F5',iris:'#B6FF3B',pupil:'#07080A',glint:'#F2F3F5',red:'#FF3B3B',redDark:'#5A0F0F',sleep:'#3A3F4A'};
+function eyeCells(g,lx,ly,open,alert){
+  // returns {sclera:[[c0,c1,row]...], iris:[[c,r]...], pupil:[c,r]|null, glint:[c,r]|null}
+  const m=(g.rows-1)/2, vis=Math.round(clamp(open,0,1)*m);
+  const out={sclera:[],iris:[],pupil:null,glint:null,lash:[],closed:open<=0.02};
+  if(out.closed){ // closed lid: a shallow ∪ with three lashes
+    const [c0,c1]=g.span[m], k=g.r===1?3:5, mid=Math.round((c0+c1)/2);
+    out.sclera.push([c0,c0+k-1,m-1],[c1-k+1,c1,m-1],[c0+k,c1-k,m]);
+    out.lash=[[c0+k+1,m+1],[mid,m+1],[c1-k-1,m+1]];
+    return out;}
+  const ic=Math.round(g.cols/2-.5)+lx, ir=m+ly, r=g.r;
+  for(let row=0;row<g.rows;row++){
+    if(Math.abs(row-m)>vis) continue;
+    const [c0,c1]=g.span[row]; out.sclera.push([c0,c1,row]);
+    if(row>=ir-r&&row<=ir+r){
+      for(let c=ic-r;c<=ic+r;c++){
+        if(c<c0||c>c1) continue;
+        if(r>=2&&Math.abs(c-ic)===r&&Math.abs(row-ir)===r) continue; // round corners of big iris
+        out.iris.push([c,row]);
+      }
+    }
+  }
+  const inside=(c,row)=>row>=0&&row<g.rows&&Math.abs(row-m)<=vis&&c>=g.span[row][0]&&c<=g.span[row][1];
+  if(inside(ic,ir)) out.pupil=[ic,ir];
+  if(inside(ic+1,ir-1)) out.glint=[ic+1,ir-1];
+  return out;
+}
+function eyeSVG(g,lx,ly,open,alert){
+  const k=eyeCells(g,lx,ly,open,alert);
+  let p='';
+  p+=`<path fill="${C.sclera}" d="${k.sclera.map(([c0,c1,r])=>`M${c0} ${r}h${c1-c0+1}v1h-${c1-c0+1}z`).join('')}"/>`;
+  if(k.lash.length) p+=`<path fill="${C.sclera}" d="${k.lash.map(([c,r])=>`M${c} ${r}h1v1h-1z`).join('')}"/>`;
+  if(k.iris.length) p+=`<path fill="${alert?C.red:C.iris}" d="${k.iris.map(([c,r])=>`M${c} ${r}h1v1h-1z`).join('')}"/>`;
+  if(k.pupil) p+=`<rect x="${k.pupil[0]}" y="${k.pupil[1]}" width="1" height="1" fill="${alert?C.redDark:C.pupil}"/>`;
+  if(k.glint) p+=`<rect x="${k.glint[0]}" y="${k.glint[1]}" width="1" height="1" fill="${C.glint}"/>`;
+  return `<svg viewBox="0 0 ${g.cols} ${g.rows}" shape-rendering="crispEdges" aria-hidden="true">${p}</svg>`;
+}
+// static DOM eyes (nav, spine nodes, footer)
+$$('[data-eye="small"]').forEach(el=>{const [lx,ly]=(el.dataset.look||'0,0').split(',').map(Number);el.innerHTML=eyeSVG(SMALL,lx,ly,1,false);const s=el.firstChild;if(!el.closest('.sec-node')){s.style.width=el.closest('footer')?'44px':'28px';s.style.height=el.closest('footer')?'24px':'16px';}});
+
+/* ============ sound ============ */
+let soundOn=false, actx=null;
+const soundBtn=$('#sound-btn');
+soundBtn.addEventListener('click',()=>{soundOn=!soundOn;soundBtn.setAttribute('aria-pressed',String(soundOn));soundBtn.setAttribute('aria-label',soundOn?'Sound on':'Sound off');if(soundOn){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume();blip(true);}catch(e){}}});
+function blip(soft){
+  if(!soundOn||!actx||document.hidden) return;
+  try{const t=actx.currentTime,o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.setValueAtTime(soft?660:980,t);o.frequency.exponentialRampToValueAtTime(soft?440:420,t+.09);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(soft?.04:.07,t+.008);g.gain.exponentialRampToValueAtTime(0.0001,t+.11);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+.12);}catch(e){}
+}
+
+/* ============ the eye wall ============ */
+const canvas=$('#wall-canvas'), ctx=canvas.getContext('2d',{alpha:false});
+const wrap=$('#wall-wrap'), tip=$('#wall-tip');
+const W={w:0,h:0,dpr:1,cd:3,bigCd:8,slots:[],eyes:[],big:null,pointer:null,pointerT:0,running:false,raf:0,last:0,ex:[]};
+const byMint=new Map();
+const counts={devs:0,devSells:0,bundleSells:0,events:0};
+
+function layout(){
+  const r=wrap.getBoundingClientRect();
+  W.dpr=Math.min(2,window.devicePixelRatio||1);
+  W.w=Math.max(1,Math.round(r.width)); W.h=Math.max(1,Math.round(r.height));
+  canvas.width=Math.round(W.w*W.dpr); canvas.height=Math.round(W.h*W.dpr);
+  const mobile=W.w<1000;
+  W.cd=Math.max(2,Math.round((mobile?2.4:3)*W.dpr)); // device px per cell
+  W.bigCd=Math.max(3,Math.round((mobile?6:8)*W.dpr));
+  // exclusion rects (device px), relative to canvas
+  W.ex=[];
+  const addEx=(el,pad)=>{if(!el)return;const b=el.getBoundingClientRect();if(b.width===0||b.height===0)return;const x0=(b.left-r.left-pad)*W.dpr,y0=(b.top-r.top-pad)*W.dpr,x1=(b.right-r.left+pad)*W.dpr,y1=(b.bottom-r.top+pad)*W.dpr;if(x1<0||y1<0||x0>canvas.width||y0>canvas.height)return;W.ex.push([x0,y0,x1,y1]);};
+  addEx($('.hero-copy'),28); addEx($('.hero-meta'),22); addEx($('.wall-tag'),10);
+  if(r.top+scrollY<70) W.ex.push([0,0,canvas.width,72*W.dpr]);
+  // slot grid
+  const ew=SMALL.cols*W.cd, eh=SMALL.rows*W.cd;
+  const gx=Math.round(ew*(mobile?1.75:1.85)), gy=Math.round(eh*(mobile?2.7:2.6));
+  const cols=Math.max(3,Math.floor((canvas.width-ew)/gx)), rows=Math.max(3,Math.floor((canvas.height-eh)/gy));
+  const ox=Math.round((canvas.width-((cols-1)*gx+ew))/2), oy=Math.round((canvas.height-((rows-1)*gy+eh))/2);
+  const slots=[];
+  let seed=1337; const srand=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+    let x=ox+i*gx+Math.round((srand()-.5)*gx*.42/W.cd)*W.cd, y=oy+j*gy+Math.round((srand()-.5)*gy*.36/W.cd)*W.cd;
+    x=Math.round(x/W.cd)*W.cd; y=Math.round(y/W.cd)*W.cd;
+    const hit=W.ex.some(([a,b,c,d])=>x+ew>a&&x<c&&y+eh>b&&y<d);
+    if(!hit) slots.push({x,y,cx:x+ew/2,cy:y+eh/2});
+  }
+  // big eye at the centroid of the free field, then clear slots it covers
+  const bw=BIG.cols*W.bigCd, bh=BIG.rows*W.bigCd;
+  let bx,by;
+  if(mobile){bx=Math.round((canvas.width-bw)/2); by=Math.round((canvas.height-bh)/2);}
+  else{
+    // centre of the region not covered by copy (left-bottom) nor meta (right): bias to upper-middle-left
+    let sx=0,sy=0; for(const s of slots){sx+=s.cx;sy+=s.cy;} const n=slots.length||1;
+    bx=Math.round(sx/n-bw/2); by=Math.round(sy/n-bh/2);
+  }
+  bx=Math.round(bx/W.bigCd)*W.bigCd; by=Math.round(by/W.bigCd)*W.bigCd;
+  W.big={x:bx,y:by,w:bw,h:bh,cx:bx+bw/2,cy:by+bh/2,lx:0,ly:0,tlx:0,tly:0,open:1,blinkT:rnd(2,5)};
+  const keep=slots.filter(s=>!(s.x+ew>bx-W.cd*4&&s.x<bx+bw+W.cd*4&&s.y+eh>by-W.cd*3&&s.y<by+bh+W.cd*3));
+  // limit to ~100 by thinning evenly if needed
+  const cap=110;
+  if(keep.length>cap){const step=keep.length/cap;const out=[];for(let i=0;i<cap;i++)out.push(keep[Math.floor(i*step)]);W.slots=out;} else W.slots=keep;
+  // rebind eyes to slots
+  const eyes=W.eyes.slice(0,W.slots.length);
+  // evict surplus
+  for(const e of W.eyes.slice(W.slots.length)) if(e.mint) dropEye(e,true);
+  W.eyes=W.slots.map((s,i)=>{const e=eyes[i]||newEye();e.slot=s;return e;});
+}
+function newEye(){return {mint:null,sym:'',name:'',dev:'',createdAt:0,cluster:new Set(),status:'free',open:0,topen:0,lx:0,ly:0,tlx:0,tly:0,lookT:rnd(1,4),blinkT:rnd(3,9),blink:0,flash:0,flashKind:null,focusT:0,alert:false,slot:null};}
+function freeEye(){
+  let best=null,bd=1e12;
+  for(const e of W.eyes){if(!e.mint){const d=Math.hypot(e.slot.cx-W.big.cx,e.slot.cy-W.big.cy);if(d<bd){bd=d;best=e;}}}
+  if(!best){for(const e of W.eyes){if(!best||e.createdAt<best.createdAt)best=e;} if(best) dropEye(best,true);}
+  return best;
+}
+function dropEye(e,unsub){
+  if(e.mint){byMint.delete(e.mint); if(unsub) feed.unsubscribe(e.mint);}
+  e.mint=null;e.status='free';e.topen=0;e.alert=false;e.cluster=new Set();e.flash=0;
+}
+function openEye(tok){
+  const e=freeEye(); if(!e) return;
+  Object.assign(e,{mint:tok.mint,sym:tok.symbol||'?',name:tok.name||'',dev:tok.traderPublicKey||'',createdAt:tok.t||performance.now(),cluster:new Set(),status:'watching',open:0,topen:1,alert:false,flash:0.001,flashKind:'open',lookT:rnd(.5,2),blinkT:rnd(3,9),mcap:tok.marketCapSol||0});
+  byMint.set(tok.mint,e);
+  counts.devs++; bumpCounters();
+}
+function alertEye(e,kind,msg){
+  e.alert=true;e.status=kind;e.flash=0.001;e.flashKind='alert';
+  // neighbours look at it
+  const R=W.cd*(W.w<1000?60:80);
+  for(const o of W.eyes){if(o===e||!o.mint)continue;const dx=e.slot.cx-o.slot.cx,dy=e.slot.cy-o.slot.cy;const d=Math.hypot(dx,dy);if(d<R){o.tlx=Math.round(dx/d*3);o.tly=Math.round(dy/d*1.2);o.focusT=rnd(2.2,3.6);o.lookT=o.focusT+rnd(1,3);}}
+  const dx=e.slot.cx-W.big.cx,dy=e.slot.cy-W.big.cy,d=Math.hypot(dx,dy)||1; W.big.tlx=Math.round(dx/d*5);W.big.tly=Math.round(dy/d*2);W.big.focusT=2.4;
+  blip(false);
+}
+
+/* draw */
+function fillCells(cells,color,x0,y0,cd){ctx.fillStyle=color;for(const [c,r] of cells)ctx.fillRect(x0+c*cd,y0+r*cd,cd,cd);}
+function drawEye(g,x0,y0,cd,lx,ly,open,alert,sleep){
+  const k=eyeCells(g,lx,ly,open,alert);
+  if(sleep) ctx.globalAlpha=.45;
+  ctx.fillStyle=sleep?C.sleep:C.sclera;
+  for(const [c0,c1,r] of k.sclera) ctx.fillRect(x0+c0*cd,y0+r*cd,(c1-c0+1)*cd,cd);
+  for(const [c,r] of k.lash) ctx.fillRect(x0+c*cd,y0+r*cd,cd,cd);
+  if(sleep){ctx.globalAlpha=1;return;}
+  if(k.iris.length) fillCells(k.iris,alert?C.red:C.iris,x0,y0,cd);
+  if(k.pupil) fillCells([k.pupil],alert?C.redDark:C.pupil,x0,y0,cd);
+  if(k.glint) fillCells([k.glint],C.glint,x0,y0,cd);
+}
+function glow(g,x0,y0,cd,grow,color,alpha){ // almond-shaped halo: the eye outline expanded by `grow` cells
+  ctx.globalAlpha=alpha;ctx.fillStyle=color;
+  const m=(g.rows-1)/2;
+  for(let r=-grow;r<g.rows+grow;r++){
+    const base=clamp(r<m?r+grow:r-grow,0,g.rows-1); // nearest shape row after expansion
+    const ext=Math.max(0,grow-Math.abs(r-base)); // taper at the tips
+    const [c0,c1]=g.span[base];
+    ctx.fillRect(x0+(c0-ext)*cd,y0+r*cd,(c1-c0+1+2*ext)*cd,cd);
+  }
+  ctx.globalAlpha=1;
+}
+function frame(now){
+  if(!W.running) return;
+  const dt=Math.min(.05,(now-W.last)/1000||0); W.last=now;
+  ctx.fillStyle='#07080A'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const cd=W.cd, ew=SMALL.cols*cd, eh=SMALL.rows*cd;
+  for(const e of W.eyes){
+    const s=e.slot;
+    if(!e.mint){ // sleeping slot: closed dim lid
+      if(e.open>0){e.open=Math.max(0,e.open-dt*4);drawEye(SMALL,s.x,s.y,cd,e.lx,e.ly,e.open,e.alert,false);}
+      else drawEye(SMALL,s.x,s.y,cd,0,0,0,false,true);
+      continue;
+    }
+    // idle look
+    e.lookT-=dt; e.focusT-=dt;
+    if(e.lookT<=0){e.lookT=rnd(1.5,6);if(e.focusT<=0){const r=Math.random();e.tlx=r<.25?0:Math.round(rnd(-3,3));e.tly=Math.round(rnd(-1,1));}}
+    e.lx+= (e.tlx-e.lx)*Math.min(1,dt*10); e.ly+=(e.tly-e.ly)*Math.min(1,dt*10);
+    // blink
+    e.blinkT-=dt;
+    if(e.blinkT<=0&&e.blink<=0){e.blink=.28;e.blinkT=rnd(2.5,9);}
+    let open=e.open;
+    if(e.topen>e.open) e.open=Math.min(1,e.open+dt*3.2); else if(e.topen<e.open) e.open=Math.max(0,e.open-dt*5);
+    open=e.open;
+    if(e.blink>0){e.blink-=dt;const p=1-e.blink/.28;open*=p<.4?1-p/.4:(p-.4)/.6;}
+    // flash
+    if(e.flash>0){
+      e.flash+=dt; const T=e.flashKind==='alert'?.9:.7; const p=e.flash/T;
+      if(p<1){const col=e.flashKind==='alert'?C.red:C.iris;const grow=1+Math.round(p*(e.flashKind==='alert'?5:3));glow(SMALL,s.x,s.y,cd,grow,col,(1-p)*(e.flashKind==='alert'?.55:.35));if(e.flashKind==='alert'&&p<.25)glow(SMALL,s.x,s.y,cd,1,C.red,.95);}
+      else e.flash=0;
+    }
+    drawEye(SMALL,s.x,s.y,cd,Math.round(e.lx),Math.round(e.ly),open,e.alert,false);
+  }
+  // big eye
+  const B=W.big;
+  B.focusT=(B.focusT||0)-dt;
+  if(W.pointer&&now-W.pointerT<4000&&B.focusT<=0){const dx=W.pointer.x-B.cx,dy=W.pointer.y-B.cy;const d=Math.hypot(dx,dy)||1;const k=clamp(d/(canvas.width*.35),0,1);B.tlx=Math.round(dx/d*5*k);B.tly=Math.round(dy/d*2.2*k);}
+  else if(B.focusT<=0){B.driftT=(B.driftT||0)-dt;if(B.driftT<=0){B.driftT=rnd(2,5);B.tlx=Math.round(rnd(-4,4));B.tly=Math.round(rnd(-2,2));}}
+  B.lx+=(B.tlx-B.lx)*Math.min(1,dt*9); B.ly+=(B.tly-B.ly)*Math.min(1,dt*9);
+  B.blinkT-=dt; if(B.blinkT<=0&&!(B.blink>0)){B.blink=.3;B.blinkT=rnd(3,8);}
+  let bopen=1; if(B.blink>0){B.blink-=dt;const p=1-B.blink/.3;bopen=p<.4?1-p/.4:(p-.4)/.6;}
+  // halo of the big eye: faint lime glow, breathing
+  glow(BIG,B.x,B.y,W.bigCd,2,C.iris,.05+.03*Math.sin(now/900));
+  glow(BIG,B.x,B.y,W.bigCd,1,C.iris,.08);
+  drawEye(BIG,B.x,B.y,W.bigCd,Math.round(B.lx),Math.round(B.ly),bopen,false,false);
+  W.raf=requestAnimationFrame(frame);
+}
+function start(){if(W.running)return;W.running=true;W.last=performance.now();W.raf=requestAnimationFrame(frame);}
+function stop(){W.running=false;cancelAnimationFrame(W.raf);}
+
+/* pointer + tooltip */
+function toCanvas(ev){const r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)*W.dpr,y:(ev.clientY-r.top)*W.dpr,cx:ev.clientX-r.left,cy:ev.clientY-r.top};}
+function nearest(p){let best=null,bd=1e9;for(const e of W.eyes){if(!e.mint)continue;const d=Math.hypot(e.slot.cx-p.x,e.slot.cy-p.y);if(d<bd){bd=d;best=e;}}return bd<W.cd*16?best:null;}
+function age(e){const s=Math.max(0,(performance.now()-e.createdAt)/1000);return s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m '+Math.round(s%60)+'s':Math.floor(s/3600)+'h';}
+function showTip(e,p){
+  const st=e.status==='watching'?'<span class="st">watching</span>':`<span class="st bad">${e.status==='dev'?'DEV SOLD':'BUNDLE SOLD'}</span>`;
+  tip.innerHTML=`<b>$${esc(e.sym)}</b> · ${age(e)} old<br>dev ${short(e.dev)}${e.cluster.size?` · cluster ${e.cluster.size}`:''}<br>${st}`;
+  const r=wrap.getBoundingClientRect();
+  const below=e.slot.y/W.dpr<(r.top+scrollY<70?150:80);
+  tip.classList.toggle('below',below);
+  tip.style.left=clamp(p.cx,100,r.width-100)+'px'; tip.style.top=(below?(e.slot.y+SMALL.rows*W.cd)/W.dpr+12:e.slot.y/W.dpr)+'px'; tip.classList.add('on');
+}
+canvas.addEventListener('pointermove',ev=>{const p=toCanvas(ev);W.pointer=p;W.pointerT=performance.now();const e=nearest(p);if(e)showTip(e,p);else tip.classList.remove('on');});
+canvas.addEventListener('pointerleave',()=>{tip.classList.remove('on');});
+canvas.addEventListener('pointerdown',ev=>{const p=toCanvas(ev);W.pointer=p;W.pointerT=performance.now();const e=nearest(p);if(e)showTip(e,p);else tip.classList.remove('on');});
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ============ feed + events ============ */
+const pill=$('#status-pill'), feedList=$('#feed-list'), feedEmpty=$('#feed-empty'), feedCount=$('#feed-count');
+function setStatus(s){pill.dataset.s=s;pill.lastElementChild.textContent=({connecting:'connecting',live:'live',reconnecting:'reconnecting',demo:'demo replay'})[s]||s;}
+function bumpCounters(){$('#c-devs').textContent=counts.devs;$('#c-dev-sells').textContent=counts.devSells;$('#c-bundle-sells').textContent=counts.bundleSells;feedCount.textContent=counts.events+(counts.events===1?' catch':' catches');}
+const lastCard=new Map();
+let lastWatchCard=0;
+function pushWatch(e,demo){
+  const t=performance.now(); if(t-lastWatchCard<4000) return; lastWatchCard=t;
+  if(feedEmpty) feedEmpty.hidden=true;
+  const el=document.createElement('div'); el.className='ev watch new';
+  el.innerHTML=`<i></i><div><div class="h"><span class="k">WATCHING</span><span>$${esc(e.sym)}</span><span>dev ${short(e.dev)}</span>${demo?'<span class="demo">DEMONSTRATION</span>':''}</div></div>`;
+  landCard(el);
+}
+function landCard(el){
+  $$('.ev.new',feedList).forEach(x=>x.classList.remove('new'));
+  feedList.prepend(el);
+  while(feedList.children.length>(W.w<1000?6:10)){const l=feedList.lastElementChild;if(l===feedEmpty)break;l.remove();}
+}
+function pushEvent(kind,e,sol,demo){
+  const key=e.mint+kind, t=performance.now();
+  if(lastCard.has(key)&&t-lastCard.get(key)<5000) return;
+  lastCard.set(key,t);
+  counts.events++; if(feedEmpty) feedEmpty.hidden=true;
+  const el=document.createElement('div'); el.className='ev new';
+  const secs=Math.max(0,(t-e.createdAt)/1000);
+  const ago=secs<60?Math.round(secs)+'s':secs<3600?Math.floor(secs/60)+'m':Math.floor(secs/3600)+'h';
+  const label=kind==='dev'?'DEV SOLD':'BUNDLE SOLD';
+  el.innerHTML=`<i></i><div><div class="h"><span class="k">${label}</span><span>$${esc(e.sym)}</span><span>${(+sol).toFixed(2)} SOL</span><span>${ago} after launch</span></div><div class="m">${demo?'<span class="demo">DEMONSTRATION</span><span>'+short(e.mint)+'</span>':`<a href="https://pump.fun/coin/${encodeURIComponent(e.mint)}" target="_blank" rel="noopener">pump.fun/coin/${short(e.mint)}</a>`}<span>by ${short(kind==='dev'?e.dev:e.lastSeller)}</span></div></div>`;
+  landCard(el);
+  bumpCounters();
+}
+function onCreate(m,demo){
+  openEye({mint:m.mint,symbol:m.symbol,name:m.name,traderPublicKey:m.traderPublicKey,marketCapSol:m.marketCapSol,t:performance.now()});
+  if(!demo) feed.subscribe(m.mint);
+  const e=byMint.get(m.mint); if(e&&!m._quiet) pushWatch(e,demo);
+}
+function onTrade(m,demo){
+  const e=byMint.get(m.mint); if(!e) return;
+  const t=performance.now(), trader=m.traderPublicKey;
+  if(m.txType==='buy'){ if(t-e.createdAt<3000&&trader&&trader!==e.dev) e.cluster.add(trader); return; }
+  if(m.txType!=='sell') return;
+  if(trader===e.dev){counts.devSells++;e.lastSeller=trader;alertEye(e,'dev');pushEvent('dev',e,m.solAmount||0,demo);}
+  else if(e.cluster.has(trader)){counts.bundleSells++;e.lastSeller=trader;alertEye(e,'bundle');pushEvent('bundle',e,m.solAmount||0,demo);}
+}
+
+/* ============ PumpPortal websocket ============ */
+const feed=(()=>{
+  const URL='wss://pumpportal.fun/api/data';
+  let ws=null, attempts=0, timer=0, openTimer=0, everOpen=false, demoMode=false, closedByUs=false;
+  function connect(){
+    if(demoMode||document.hidden) return;
+    clearTimeout(timer); closedByUs=false;
+    setStatus(attempts?'reconnecting':'connecting');
+    try{ws=new WebSocket(URL);}catch(e){fail();return;}
+    openTimer=setTimeout(()=>{if(ws&&ws.readyState!==1){try{ws.close();}catch(e){}}},7000);
+    ws.onopen=()=>{clearTimeout(openTimer);everOpen=true;attempts=0;setStatus('live');send({method:'subscribeNewToken'});const keys=[...byMint.keys()];if(keys.length)send({method:'subscribeTokenTrade',keys});};
+    ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}if(!m||typeof m!=='object')return;if(m.txType==='create'&&m.mint)onCreate(m,false);else if((m.txType==='buy'||m.txType==='sell')&&m.mint)onTrade(m,false);};
+    ws.onerror=()=>{};
+    ws.onclose=()=>{clearTimeout(openTimer);ws=null;if(closedByUs)return;fail();};
+  }
+  function fail(){
+    attempts++;
+    if(!everOpen&&attempts>=2){startDemo();return;}
+    setStatus('reconnecting');
+    const wait=Math.min(30000,1000*Math.pow(2,attempts-1))*(0.8+Math.random()*.4);
+    timer=setTimeout(connect,wait);
+  }
+  function send(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
+  function close(){closedByUs=true;clearTimeout(timer);clearTimeout(openTimer);if(ws){try{ws.close();}catch(e){}ws=null;}}
+  return {
+    connect, close,
+    subscribe(mint){send({method:'subscribeTokenTrade',keys:[mint]});},
+    unsubscribe(mint){if(!demoMode)send({method:'unsubscribeTokenTrade',keys:[mint]});},
+    get demo(){return demoMode;}, set demo(v){demoMode=v;},
+    get live(){return ws&&ws.readyState===1;}
+  };
+})();
+
+/* ============ demonstration replay (fallback only) ============ */
+const demo={on:false,timers:[],coins:[]};
+const DEMO_NAMES=[['PIXL','Pixel Panic'],['GASCAT','Gas Cat'],['NIGHTSHIFT','Night Shift'],['BLINK','Blink Protocol'],['SLOTMACHINE','Slot Machine'],['WAGMIBOT','Wagmi Bot'],['KETTLE','Kettle Finance'],['HUNDRED','Hundred Eyes'],['REDCANDLE','Red Candle'],['SLEEPLESS','Sleepless'],['DUSTBIN','Dust Bin'],['PAPERHANDS','Paper Hands'],['LATENCY','Latency'],['RUGRADAR','Rug Radar'],['QUIETDEV','Quiet Dev'],['TOPBLAST','Top Blast'],['SNIPE','Snipe Season'],['FEEWALLET','Fee Wallet'],['TIPJAR','Tip Jar'],['GLINT','Glint'],['LOWCAP','Low Cap'],['SOLDOUT','Sold Out'],['CLUSTER','Cluster'],['SLOTZERO','Slot Zero'],['BLOCKTWO','Block Two'],['VIGIL','Vigil'],['OWLET','Owlet'],['SENTRY','Sentry Cat'],['NOSLEEP','No Sleep'],['WATCHER','Watcher']];
+const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const fakeAddr=()=>{let s='';for(let i=0;i<44;i++)s+=B58[Math.floor(Math.random()*58)];return s;};
+function startDemo(){
+  if(demo.on) return; demo.on=true; feed.demo=true; feed.close();
+  setStatus('demo'); $('#demo-banner').hidden=false; $('#wall-tag-text').textContent=(matchMedia('(hover:none)').matches?'Tap an eye.':'Hover an eye.');
+  $('#counters-src').innerHTML='<b>Demonstration replay</b>, since you opened this page';
+  $('#feed-empty').textContent='Replaying a synthetic launch tape. Nothing below is real.';
+  layout();
+  let n=0;
+  const prefill=Math.min(80,Math.max(0,W.slots.length-6));
+  const launch=()=>{
+    if(!demo.on) return;
+    const [sym,name]=DEMO_NAMES[n++%DEMO_NAMES.length];
+    const mint=fakeAddr(), dev=fakeAddr();
+    onCreate({mint,symbol:sym,name,traderPublicKey:dev,marketCapSol:rnd(28,45),_quiet:n<=prefill&&n%9!==0},true);
+    // cluster buys inside 3s
+    const cluster=[]; const nc=Math.floor(rnd(0,7));
+    for(let i=0;i<nc;i++){const w=fakeAddr();cluster.push(w);demo.timers.push(setTimeout(()=>onTrade({mint,txType:'buy',traderPublicKey:w,solAmount:rnd(.3,2.5)},true),rnd(150,2600)));}
+    // random organic buys
+    for(let i=0;i<3;i++)demo.timers.push(setTimeout(()=>onTrade({mint,txType:'buy',traderPublicKey:fakeAddr(),solAmount:rnd(.1,1)},true),rnd(3500,20000)));
+    // maybe dev sells / bundle sells
+    if(Math.random()<.28)demo.timers.push(setTimeout(()=>onTrade({mint,txType:'sell',traderPublicKey:dev,solAmount:rnd(.6,6)},true),rnd(9000,70000)));
+    if(cluster.length&&Math.random()<.3)demo.timers.push(setTimeout(()=>onTrade({mint,txType:'sell',traderPublicKey:cluster[Math.floor(Math.random()*cluster.length)],solAmount:rnd(.4,3)},true),rnd(7000,60000)));
+    demo.timers.push(setTimeout(launch,n<prefill?1500/prefill:n<prefill+20?rnd(500,1200):rnd(900,3200)));
+  };
+  launch();
+  // early catches so the log is alive on open
+  [2600,4300,6200,8100,9800].forEach((ms,i)=>demo.timers.push(setTimeout(()=>{const open=[...byMint.values()].filter(e=>e.mint&&!e.alert);if(!open.length)return;const e=open[Math.floor(Math.random()*open.length)];if(i%2===1&&e.cluster.size){const w=[...e.cluster][0];onTrade({mint:e.mint,txType:'sell',traderPublicKey:w,solAmount:rnd(.4,2.5)},true);}else onTrade({mint:e.mint,txType:'sell',traderPublicKey:e.dev,solAmount:rnd(.6,4)},true);},ms)));
+}
+function pauseDemo(){demo.timers.forEach(clearTimeout);demo.timers=[];demo.paused=true;}
+function resumeDemo(){if(demo.on&&demo.paused){demo.paused=false;demo.on=false;startDemoAgain();}}
+function startDemoAgain(){demo.on=true;let n=Math.floor(Math.random()*DEMO_NAMES.length);const go=()=>{if(!demo.on)return;const [sym,name]=DEMO_NAMES[n++%DEMO_NAMES.length];const mint=fakeAddr(),dev=fakeAddr();onCreate({mint,symbol:sym,name,traderPublicKey:dev},true);if(Math.random()<.28)demo.timers.push(setTimeout(()=>onTrade({mint,txType:'sell',traderPublicKey:dev,solAmount:rnd(.6,6)},true),rnd(9000,70000)));demo.timers.push(setTimeout(go,rnd(900,3200)));};go();}
+
+/* visibility */
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){stop();if(demo.on)pauseDemo();else feed.close();}
+  else{start();if(demo.on)resumeDemo();else feed.connect();}
+});
+let rT=0; addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(layout,120);});
+
+/* boot the wall */
+if(matchMedia('(hover:none)').matches)$('#wall-tag-text').textContent='Each eye is a live pump.fun launch. Tap one.';
+layout(); start();
+if(!reduce) feed.connect(); else startDemo();
+if('WebSocket' in window===false) startDemo();
+
+/* ============ scan section ============ */
+const SAMPLE={mint:'SAMPLE111111111111111111111111111111111111',symbol:'SAMPLE',name:'Sample coin',dev:'7kXqPumpDevSampleWa11etAddr3ssXXXXXXXXXXXXX',devPct:3.4,feeWallet:'7kXqPumpDevSampleWa11etAddr3ssXXXXXXXXXXXXX',
+  cluster:[['BunD1e1'],['BunD1e2'],['BunD1e3'],['BunD1e4'],['BunD1e5'],['BunD1e6']].map((w,i)=>({wallet:w[0]+'SampleC1usterWa11et'+i+'xxxxxxxxxxxxxxxxxxx',pct:[6.1,4.2,3.0,2.4,1.8,1.1][i]})),
+  snipers:[{wallet:'Sn1pe1SampleWa11etxxxxxxxxxxxxxxxxxxxxxxxxxx',pct:2.2},{wallet:'Sn1pe2SampleWa11etxxxxxxxxxxxxxxxxxxxxxxxxxx',pct:1.7},{wallet:'Sn1pe3SampleWa11etxxxxxxxxxxxxxxxxxxxxxxxxxx',pct:0.9},{wallet:'Sn1pe4SampleWa11etxxxxxxxxxxxxxxxxxxxxxxxxxx',pct:0.6}],
+  top:[6.1,4.9,4.2,3.0,2.6,2.4,2.2,1.8,1.7,1.5].map((p,i)=>({wallet:'Top'+(i+1)+'SampleHo1derWa11etxxxxxxxxxxxxxxxxxxxxxxx',pct:p})),
+  flags:{},partial:false,source:'sample'};
+const orbit=$('#orbit'), rings=$('#orbit-rings');
+const nodes={dev:$('#node-dev'),cluster:$('#node-cluster'),snipers:$('#node-snipers'),top:$('#node-top'),fee:$('#node-fee')};
+let scanData=null;
+/* trigger demonstration */
+const timeline=$('#timeline'), exitCard=$('#exit-card'), testBtn=$('#test-trigger');
+let demoTimers=[];
+function resetTriggerDemo(){demoTimers.forEach(clearTimeout);demoTimers=[];timeline.hidden=true;exitCard.hidden=true;$$('.tl',timeline).forEach(t=>t.classList.remove('on','done'));testBtn.disabled=false;testBtn.textContent='Test a trigger';}
+testBtn.addEventListener('click',()=>{
+  resetTriggerDemo(); testBtn.disabled=true; testBtn.textContent='Running…';
+  const dev=nodes.dev; dev.classList.add('bad'); dev.querySelector('.ey').innerHTML=eyeSVG(SMALL,-2,0,1,true); dev.querySelector('.st').innerHTML='<b>DEV SOLD</b> · 2.1%';
+  // other eyes look at the dev
+  orbitKeys.filter(k=>k!=='dev').forEach(k=>nodes[k].querySelector('.ey').innerHTML=eyeSVG(SMALL,-3,-1,1,false));
+  timeline.hidden=false;
+  const tl=$$('.tl',timeline);
+  const step=(i,ms)=>demoTimers.push(setTimeout(()=>{tl.forEach((t,j)=>{t.classList.toggle('on',j<=i);t.classList.toggle('done',j<i);});},ms));
+  step(0,50);step(1,650);step(2,1250);step(3,1900);
+  demoTimers.push(setTimeout(()=>{tl.forEach(t=>t.classList.add('done'));exitCard.hidden=false;$('#exit-sol').textContent=(rnd(3.9,6.2)).toFixed(2)+' SOL';$('#exit-slot').textContent=(312000000+Math.floor(Math.random()*9000000)).toLocaleString('en-US').replace(/,/g,' ');
+    orbitKeys.filter(k=>k!=='dev').forEach(k=>{nodes[k].querySelector('.st').innerHTML='<b>exited</b>';});
+    testBtn.disabled=false;testBtn.textContent='Run it again';},2600));
+});
+
+function renderScan(d,src){
+  scanData=d;
+  const srcEl=$('#coin-src');
+  srcEl.className='src'+(src==='live'?' live':'');
+  srcEl.textContent=src==='live'?(d.partial?'LIVE SCAN · PARTIAL':'LIVE SCAN'):'SAMPLE · DEMONSTRATION';
+  $('#coin-sym').textContent='$'+(d.symbol||'?');
+  $('#coin-name').textContent=d.name||(src==='live'?'name unavailable':'');
+  $('#coin-mint').textContent=src==='live'?d.mint:'no real address — sample data';
+  const sum=a=>a.reduce((s,x)=>s+(x.pct||0),0);
+  const pct=v=>v==null?'—':v.toFixed(1)+'%';
+  const set=(k,val,sub,bad)=>{const n=nodes[k];n.classList.toggle('bad',!!bad);n.querySelector('.val').textContent=val;n.querySelector('.sub').textContent=sub;n.querySelector('.st').innerHTML='<b>watching</b>';n.querySelector('.ey').innerHTML=eyeSVG(SMALL,[-2,2,-1,1,0][['dev','cluster','snipers','top','fee'].indexOf(k)],0,1,false);};
+  set('dev',short(d.dev)||'unknown',d.dev?('holds '+pct(d.devPct)):'creator not resolved');
+  set('cluster',d.cluster.length+' wallet'+(d.cluster.length===1?'':'s'),d.cluster.length?(pct(sum(d.cluster))+' of supply · slot 0–2'):(d.flags.creationNotReached?'creation block too deep':'none in creation block'));
+  set('snipers',d.snipers.length+' wallet'+(d.snipers.length===1?'':'s'),d.snipers.length?(pct(sum(d.snipers))+' of supply · slot 3–10'):'none found in slot 3–10');
+  set('top',d.top.length+' wallets',d.top.length?(pct(sum(d.top))+' combined'):(d.flags.holdersUnavailable?'holders unavailable':'no holders found'));
+  set('fee',short(d.feeWallet||d.dev)||'unknown','claims creator fees');
+  const list=$('#holders-list'); list.innerHTML='';
+  const rows=[];
+  if(d.dev) rows.push({cls:'dv',i:'dev',w:d.dev,tag:'dev',p:d.devPct});
+  const clusterSet=new Set(d.cluster.map(c=>c.wallet));
+  d.top.forEach((h,i)=>rows.push({cls:clusterSet.has(h.wallet)?'cl':'',i:String(i+1),w:h.wallet,tag:clusterSet.has(h.wallet)?'cluster':'',p:h.pct}));
+  const max=Math.max(1,...rows.map(r=>r.p||0));
+  for(const r of rows){const el=document.createElement('div');el.className='hrow '+r.cls;el.innerHTML=`<span class="i">${r.i}</span><span class="w">${short(r.w)}${r.tag?`<small>${r.tag}</small>`:''}<span class="b"><i style="width:${((r.p||0)/max*100).toFixed(1)}%"></i></span></span><span class="p">${pct(r.p)}</span>`;list.appendChild(el);}
+  $('#holders-title').textContent=(src==='live'?'Top 10 holders · % of supply'+(d.flags.poolExcluded?' · pool excluded':''):'Top 10 holders · % of supply · sample');
+  resetTriggerDemo();
+}
+renderScan(SAMPLE,'sample');
+
+const scanForm=$('#scan-form'), scanInput=$('#scan-input'), scanBtn=$('#scan-btn'), scanMsg=$('#scan-msg');
+scanForm.addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const mint=scanInput.value.trim();
+  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(mint)){scanMsg.textContent='That is not a Solana address. Paste the full pump.fun contract address (32–44 characters).';scanMsg.classList.add('bad');return;}
+  scanMsg.classList.remove('bad'); scanMsg.textContent='Scanning the dev, creation block and top holders…'; scanBtn.disabled=true;
+  try{
+    if(location.protocol==='file:') throw new Error('no-api');
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),12000);
+    const r=await fetch('/api/scan?mint='+encodeURIComponent(mint),{signal:ctl.signal}); clearTimeout(t);
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('HTTP '+r.status));}
+    const d=await r.json();
+    d.cluster=d.cluster||[];d.snipers=d.snipers||[];d.top=d.top||[];d.flags=d.flags||{};
+    renderScan(d,'live');
+    scanMsg.textContent=d.partial?'Partial scan: '+Object.keys(d.flags).join(', ')+'. Eyes are placed on what was found.':'Scan complete. These are the wallets Argus would watch for this coin.';
+  }catch(e){
+    renderScan(SAMPLE,'sample');
+    scanMsg.textContent=(e.message==='no-api'?'This preview has no scan API.':'The scan API did not answer ('+e.message+').')+' Showing the sample coin instead — nothing here is real.';
+    scanMsg.classList.add('bad');
+  }finally{scanBtn.disabled=false;}
+});
+
+/* orbit motion (desktop only) */
+let orbitVisible=false, orbitRaf=0, orbitA=0, orbitLast=0;
+const orbitKeys=['dev','cluster','snipers','top','fee'];
+function orbitFrame(now){
+  if(!orbitVisible||innerWidth<760){orbitRaf=0;return;}
+  const dt=Math.min(.05,(now-orbitLast)/1000||0);orbitLast=now; if(!reduce) orbitA+=dt*.09;
+  const r=orbit.getBoundingClientRect(), cx=r.width/2, cy=r.height/2, Rx=cx-100-6, Ry=cy-50-6;
+  let lines='';
+  orbitKeys.forEach((k,i)=>{const a=orbitA+i*(Math.PI*2/5)-Math.PI/2;const x=cx+Math.cos(a)*Rx,y=cy+Math.sin(a)*Ry;const n=nodes[k];n.style.transform=`translate(${(x-100).toFixed(1)}px,${(y-n.offsetHeight/2).toFixed(1)}px)`;lines+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${n.classList.contains('bad')?'#FF3B3B':'#272B34'}" stroke-dasharray="2 4"/>`;});
+  rings.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
+  rings.innerHTML=`<ellipse cx="${cx}" cy="${cy}" rx="${Rx}" ry="${Ry}" fill="none" stroke="#1B1E25"/>`+lines;
+  orbitRaf=requestAnimationFrame(orbitFrame);
+}
+new IntersectionObserver(es=>{orbitVisible=es[0].isIntersecting&&!document.hidden;if(orbitVisible&&!orbitRaf){orbitLast=performance.now();orbitRaf=requestAnimationFrame(orbitFrame);}},{threshold:.05}).observe(orbit);
+addEventListener('resize',()=>{if(innerWidth<760)orbitKeys.forEach(k=>nodes[k].style.transform='');else if(orbitVisible&&!orbitRaf){orbitRaf=requestAnimationFrame(orbitFrame);}});
+
+/* ============ trigger eyes open on scroll ============ */
+const trigEyes=$$('[data-eye="trig"]');
+trigEyes.forEach(el=>{el.innerHTML=eyeSVG(SMALL,0,0,0,false);});
+const io=new IntersectionObserver(es=>{es.forEach((en,i)=>{if(!en.isIntersecting)return;const row=en.target;const ey=row.querySelector('[data-eye="trig"]');if(ey&&!ey.dataset.open){ey.dataset.open='1';const idx=trigEyes.indexOf(ey);const lx=[-2,-1,0,1,2][idx%5]||0;let step=0;const frames=[0.2,0.55,1];const tick=()=>{ey.innerHTML=eyeSVG(SMALL,lx,0,frames[step],false);if(++step<frames.length)setTimeout(tick,90);};setTimeout(tick,80+idx*110);}
+  io.unobserve(row);});},{threshold:.4});
+$$('.trig').forEach(t=>io.observe(t));
+$$('.switch').forEach(sw=>sw.addEventListener('click',()=>sw.setAttribute('aria-checked',sw.getAttribute('aria-checked')==='true'?'false':'true')));
+
+/* ============ token block from config ============ */
+(function token(){
+  const ca=(CFG.CA||'').trim();
+  const buy=CFG.BUY||(ca?`https://pump.fun/coin/${ca}`:''), chart=CFG.CHART||(ca?`https://gmgn.ai/sol/token/${ca}`:''), x=(CFG.X||'').trim();
+  const caText=$('#ca-text'), copy=$('#ca-copy'), buyL=$('#buy-link'), chartL=$('#chart-link'), xL=$('#x-link'), xF=$('#x-link-foot'), navBuy=$('#nav-buy'), note=$('#token-note');
+  if(ca){caText.textContent=ca;caText.classList.remove('empty');copy.disabled=false;note.textContent='Only this address is $ARGUS. Anything else with the name is not.';}
+  copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(ca);copy.textContent='copied';setTimeout(()=>copy.textContent='copy',1400);}catch(e){copy.textContent='select & copy';}});
+  const link=(a,href)=>{if(href){a.href=href;a.target='_blank';a.rel='noopener';a.removeAttribute('aria-disabled');}else{a.setAttribute('aria-disabled','true');a.removeAttribute('href');}};
+  link(buyL,buy);link(chartL,chart);
+  if(buy){navBuy.href=buy;navBuy.target='_blank';navBuy.rel='noopener';}
+  if(x){const h=/^https?:/.test(x)?x:'https://x.com/'+x.replace(/^@/,'');[xL,xF].forEach(a=>{a.hidden=false;a.href=h;a.target='_blank';a.rel='noopener';});}
+})();
+})();
+</script>
+</body>
+</html>
